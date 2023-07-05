@@ -27,11 +27,11 @@ class CurrencyConverter(commands.Cog):
             result = round(exchange_rate * amount, 3)
             embed = Embed(
                 title="Currency Conversion Result",
-                description=f'The conversion of {str(amount).rstrip("0").rstrip(".")} {from_currency} to {to_currency} is {str(result).rstrip("0").rstrip(".")}',
+                description=f'The conversion of {amount:g} {from_currency} to {to_currency} is {result:g}',
                 color=self.bot.main_color,
             )
             embed.set_footer(
-                text=f'Conversion Rate: 1 {from_currency} = {str(round(exchange_rate, 3)).rstrip("0").rstrip(".")} {to_currency}',
+                text=f'Conversion Rate: 1 {from_currency} = {round(exchange_rate, 3):g} {to_currency}',
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild),
             )
         except ValueError as e:
