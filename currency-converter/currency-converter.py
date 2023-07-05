@@ -16,7 +16,7 @@ class CurrencyConverter(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
-    async def convert(self, ctx, amount: float = 1, from_currency: str = "USD", to_currency: str = "USD"):
+    async def convert(self, ctx, amount: float = 1, from_currency: str.upper = "USD", to_currency: str.upper = "USD"):
         # AlphaVantage has no API Key validation, any string that isn't "demo" will do
         apiKey = token_urlsafe(10)
         cc = ForeignExchange(key=apiKey)
