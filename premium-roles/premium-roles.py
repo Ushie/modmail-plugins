@@ -7,8 +7,8 @@ class PremiumRoles(commands.Cog):
         self.db = bot.plugin_db.get_partition(self)
         self.required_roles = []
         self.premium_roles = []
-        self.bot.loop.create_task(self._set_db())
         self.allowed_mentions = discord.AllowedMentions(roles=False, users=False, everyone=False)
+        self.bot.loop.create_task(self._set_db())
 
     async def _set_db(self):
         data = await self.db.find_one({"_id": "premium_roles"})
@@ -46,11 +46,11 @@ class PremiumRoles(commands.Cog):
         """
         Get existing premium and required roles.
         """
-        required_role_names = [ctx.guild.get_role(role_id).mention for role_id in self.required_roles]
-        premium_role_names = [ctx.guild.get_role(role_id).mention for role_id in self.premium_roles]
+        required_role_mentions = [ctx.guild.get_role(role_id).mention for role_id in self.required_roles]
+        premium_role_mentions = [ctx.guild.get_role(role_id).mention for role_id in self.premium_roles]
 
-        required_roles_str = "\n".join(required_role_names) if required_role_names else "None"
-        premium_roles_str = "\n".join(premium_role_names) if premium_role_names else "None"
+        required_roles_str = "\n".join(required_role_mentions) if required_role_mentions else "None"
+        premium_roles_str = "\n".join(premium_role_mentions) if premium_role_mentions else "None"
 
         response = f"Required Roles:\n{required_roles_str}\n\nPremium Roles:\n{premium_roles_str}"
         await ctx.send(response, allowed_mentions=self.allowed_mentions)
