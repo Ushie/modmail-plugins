@@ -52,7 +52,7 @@ class CurrencyConverter(commands.Cog):
                     logger.debug("Invalid API call")
                     embed = Embed(
                         title="Invalid Currency Conversion Request",
-                        description=f'The requested currency conversion from "{exchange_data["from_currency"]}" to "{exchange_data["to_currency"]}" is not valid. Please ensure that both source and target currencies are correctly specified using their respective currency codes.',
+                        description=f'The requested currency conversion from "{exchange_data["from_currency"].upper()}" to "{exchange_data["to_currency"].upper()}" is not valid. Please ensure that both source and target currencies are correctly specified using their respective currency codes.',
                         color=self.bot.error_color,
                     )
                     embed.set_footer(
@@ -63,11 +63,11 @@ class CurrencyConverter(commands.Cog):
                     result = round(exchange_data["exchange_rate"] * amount, 3)
                     embed = Embed(
                         title="Currency Conversion Result",
-                        description=f'The conversion of {amount:g} {exchange_data["from_currency"]} to {exchange_data["to_currency"]} is {result:g}',
+                        description=f'The conversion of {amount:g} {exchange_data["from_currency"].upper()} to {exchange_data["to_currency"].upper()} is {result:g}',
                         color=self.bot.main_color,
                     )
                     embed.set_footer(
-                        text=f'Conversion Rate: 1 {exchange_data["from_currency"]} = {round(exchange_data["exchange_rate"], 3):g} {exchange_data["to_currency"]}',
+                        text=f'Conversion Rate: 1 {exchange_data["from_currency"].upper()} = {round(exchange_data["exchange_rate"], 3):g} {exchange_data["to_currency"].upper()}',
                         icon_url=self.bot.get_guild_icon(guild=ctx.guild),
                     )
                 case _:
