@@ -8,14 +8,12 @@ wolfram_icon = 'https://i.imgur.com/sGKq1A6.png'
 wolfram_url = 'http://www.wolframalpha.com/input/?i='
 api_url = 'http://api.wolframalpha.com/v2/query?output=JSON&format=image,plaintext&input='
 
-class WolframResult(object):
+
+class SubPod(object):
     def __init__(self, data):
-        self.pods = [Pod(p) for p in data.get('pods', [])]
-        try:
-            self.primary_pod = list(filter(lambda x: x.is_primary, self.pods))[0] if self.pods else []
-        except IndexError:
-            self.primary_pod = None
-        self.success = data.get('success') and bool(self.primary_pod)
+        self.text = data.get('plaintext', '').strip()
+        self.image = data.get('img', {}).get('src') or None
+
 
 class Pod(object):
     def __init__(self, data):
@@ -23,19 +21,22 @@ class Pod(object):
         self.subpods = [SubPod(p) for p in data.get('subpods')]
         self.is_primary = data.get('primary')
 
-class SubPod(object):
+
+class WolframResult(object):
     def __init__(self, data):
-        self.text = data.get('plaintext', '').strip()
-        self.image = data.get('img', {}).get('src') or None
+        self.pods = [Pod(p) for p in data.get('pods', [])]
+        self.primary_pod = next((p for p in self.pods if p.is_primary), None)
+        self.success = data.get('success') and bool(self.primary_pod)
+
 
 class WolframCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = bot.plugin_db.get_partition(self)
-        self.allowed_mentions = discord.AllowedMentions(roles=False, users=False, everyone=False)
+        self.allowed_mentions = discord.AllowedMentions.none()
         self.app_id = None
         self.bot.loop.create_task(self._set_db())
-        
+
     async def _set_db(self):
         data = await self.db.find_one({"_id": "wolfram"})
         if data is None:
@@ -53,7 +54,10 @@ class WolframCog(commands.Cog):
         return response
 
     async def send_response(self, message, init, response):
-        await init.edit(embed=response) if init else await message.channel.send(embed=response)
+        if init:
+            await init.edit(embed=response)
+        else:
+            await message.channel.send(embed=response)
 
     async def wolframalpha(self, ctx, *args):
         if not args:
@@ -65,7 +69,7 @@ class WolframCog(commands.Cog):
             return
 
         full_results = False
-        if len(args) and args[-1].lower() == '--full':
+        if args and args[-1].lower() == '--full':
             args = args[:-1]
             full_results = True
 
@@ -123,14 +127,10 @@ class WolframCog(commands.Cog):
             )
             response.description = f'You can view them directly [here]({wolfram_url + query}).'
             await self.send_response(ctx.message, init_message, response)
-    
+
     def make_safe_query(self, query):
         safe = r'`~!@$^*()[]{}\|:;"\'<>,.'
-        query_list = list(' '.join(query))
-        safe_query = ''
-        while query_list:
-            char = query_list.pop(0).lower()
-            safe_query += escape(char, safe=safe)
+        safe_query = ''.join(escape(char, safe=safe) for char in ' '.join(query).lower())
         return safe_query
 
     @commands.command()
@@ -157,6 +157,7 @@ class WolframCog(commands.Cog):
         )
         self.app_id = app_id
         await ctx.send("Wolfram|Alpha app ID set successfully.")
-        
+
+
 async def setup(bot):
     await bot.add_cog(WolframCog(bot))
