@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from core import checks
+from core.models import PermissionLevel
 from urllib.parse import quote as escape
 import aiohttp
 import json
@@ -138,6 +140,7 @@ class WolframCog(commands.Cog):
         await self.wolframalpha(ctx, *args)
 
     @commands.group()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def wolframconfig(self, ctx):
         """
         Subcommand group for configuring Wolfram|Alpha app ID.
@@ -146,6 +149,7 @@ class WolframCog(commands.Cog):
             await ctx.send_help(ctx.command)
 
     @wolframconfig.command(name="setappid")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def set_app_id(self, ctx, app_id: str):
         """
         Set the Wolfram|Alpha app ID.
