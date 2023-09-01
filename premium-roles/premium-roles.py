@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from core import checks
+from core.models import PermissionLevel
 
 class PremiumRoles(commands.Cog):
     def __init__(self, bot):
@@ -34,6 +36,7 @@ class PremiumRoles(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @premium.group(name="config")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config(self, ctx):
         """
         Subcommand group for configuring premium roles.
@@ -42,6 +45,7 @@ class PremiumRoles(commands.Cog):
             await ctx.send_help(ctx.command)
 
     @premium_config.command(name="get")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_get(self, ctx):
         """
         Get existing premium and required roles.
@@ -56,12 +60,14 @@ class PremiumRoles(commands.Cog):
         await ctx.send(response, allowed_mentions=self.allowed_mentions)
     
     @premium_config.command(name="addrequired")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_add_required(self, ctx, role: discord.Role):
         self.required_roles.append(role.id)
         await self._update_db()
         await ctx.send(f"Added {role.mention} as a required role!", allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="removerequired")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_remove_required(self, ctx, role: discord.Role):
         if role.id in self.required_roles:
             self.required_roles.remove(role.id)
@@ -71,12 +77,14 @@ class PremiumRoles(commands.Cog):
             await ctx.send(f"{role.mention} is not in the required roles list.", allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="add")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_add_premium(self, ctx, role: discord.Role):
         self.premium_roles.append(role.id)
         await self._update_db()
         await ctx.send(f"Added {role.mention} as a premium role!", allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="remove")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_remove_premium(self, ctx, role: discord.Role):
         if role.id in self.premium_roles:
             self.premium_roles.remove(role.id)
