@@ -49,13 +49,17 @@ class PremiumRoles(commands.Cog):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def purge_users(self, ctx):
         """
-        Check premium roles for all members and revoke if ineligible.
+        Check all members with premium roles and revoke if ineligible.
         """
         removed_count = 0
-        for role in self.premium_roles:
-            for member in ctx.guild.get_role(role).members:
-                if await remove_roles_if_necessary(member, self.required_roles, self.premium_roles):
-                    removed_count += 1
+        for role_id in self.premium_roles:
+            role = ctx.guild.get_role(role_id)
+            if role:
+                for member in role.members:
+                    if await remove_roles_if_necessary(member, self.required_roles, member.roles):
+                        removed_count += 1
+            else:
+                print(f"Role {role_id} not found.")
 
         await ctx.send(f"Roles removed for {removed_count} member(s).", allowed_mentions=self.allowed_mentions)
 
@@ -74,13 +78,43 @@ class PremiumRoles(commands.Cog):
         """
         Get existing premium and required roles.
         """
-        required_role_mentions = [ctx.guild.get_role(role_id).mention for role_id in self.required_roles]
-        premium_role_mentions = [ctx.guild.get_role(role_id).mention for role_id in self.premium_roles]
+        roles_info = {
+            "Required Roles": {"Valid": [], "Invalid": []},
+            "Premium Roles": {"Valid": [], "Invalid": []}
+        }
 
-        required_roles_str = "\n".join(required_role_mentions) if required_role_mentions else "None"
-        premium_roles_str = "\n".join(premium_role_mentions) if premium_role_mentions else "None"
+        for role_id in self.required_roles:
+            role = ctx.guild.get_role(role_id)
+            if role:
+                roles_info["Required Roles"]["Valid"].append(role.mention)
+            else:
+                roles_info["Required Roles"]["Invalid"].append(role_id)
 
-        response = f"Required Roles:\n{required_roles_str}\n\nPremium Roles:\n{premium_roles_str}"
+        for role_id in self.premium_roles:
+            role = ctx.guild.get_role(role_id)
+            if role:
+                roles_info["Premium Roles"]["Valid"].append(role.mention)
+            else:
+                roles_info["Premium Roles"]["Invalid"].append(role_id)
+
+        response = ''
+        for role_type, status in roles_info.items():
+            response += f"{role_type}:\n- "
+            response += "\n- ".join(status["Valid"]) if status["Valid"] else "None"
+            response += "\n\n"
+
+        invalid_roles = [(role_id, role_type) for role_type, status in roles_info.items() if role_type != "Valid" for
+                         role_id in status["Invalid"]]
+
+        if invalid_roles:
+            response += f"Invalid roles:"
+            for role_type in ("Premium Roles", "Required Roles"):
+                role_invalid_list = [f"    - {role_id}" for role_id, rt in
+                                     invalid_roles if rt == role_type]
+                if role_invalid_list:
+                    response += f"\n- {role_type}:\n"
+                    response += "\n".join(role_invalid_list)
+            response += "\nYou can remove the invalid roles with the `premium config removeinvalid` command"
         await ctx.send(response, allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="addrequired")
@@ -128,6 +162,32 @@ class PremiumRoles(commands.Cog):
             await ctx.send(f"Removed {role.mention} from premium roles.", allowed_mentions=self.allowed_mentions)
         else:
             await ctx.send(f"{role.mention} is not in the premium roles list.", allowed_mentions=self.allowed_mentions)
+
+    @premium_config.command(name="removeinvalid")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def premium_config_remove_invalid(self, ctx):
+        """
+        Remove invalid roles.
+        """
+        roles_removed = 0
+
+        async def remove_invalid_roles(role_ids):
+            count = 0
+            for role_id in role_ids:
+                role = ctx.guild.get_role(role_id)
+                if not role:
+                    self.premium_roles.remove(role_id)
+                    await self._update_db()
+                    count += 1
+            return count
+
+        for roles in (self.premium_roles, self.required_roles):
+            roles_removed += await remove_invalid_roles(roles)
+
+        if roles_removed != 0:
+            await ctx.send(f"Removed {roles_removed} invalid role(s)")
+        else:
+            await ctx.send("No invalid roles to remove")
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
