@@ -123,9 +123,12 @@ class PremiumRoles(commands.Cog):
         """
         Add required role.
         """
-        self.required_roles.append(role.id)
-        await self._update_db()
-        await ctx.send(f"Added {role.mention} as a required role!", allowed_mentions=self.allowed_mentions)
+        if role.id not in self.required_roles:
+            self.required_roles.append(role.id)
+            await self._update_db()
+            await ctx.send(f"Added {role.mention} as a required role!", allowed_mentions=self.allowed_mentions)
+        else:
+            await ctx.send(f"{role.mention} is already a required role!", allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="removerequired")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -146,9 +149,12 @@ class PremiumRoles(commands.Cog):
         """
         Add premium role.
         """
-        self.premium_roles.append(role.id)
-        await self._update_db()
-        await ctx.send(f"Added {role.mention} as a premium role!", allowed_mentions=self.allowed_mentions)
+        if role.id not in self.premium_roles:
+            self.premium_roles.append(role.id)
+            await self._update_db()
+            await ctx.send(f"Added {role.mention} as a premium role!", allowed_mentions=self.allowed_mentions)
+        else:
+            await ctx.send(f"{role.mention} is already a premium role!", allowed_mentions=self.allowed_mentions)
 
     @premium_config.command(name="remove")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
