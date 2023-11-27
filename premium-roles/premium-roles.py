@@ -54,7 +54,6 @@ class PremiumRoles(commands.Cog):
         removed_count = 0
         for role in self.premium_roles:
             for member in ctx.guild.get_role(role).members:
-                print(ctx.guild.get_role(role).name)
                 if await remove_roles_if_necessary(member, self.required_roles, self.premium_roles):
                     removed_count += 1
 
