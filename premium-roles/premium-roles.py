@@ -9,6 +9,8 @@ async def remove_roles_if_necessary(member, required_roles, premium_roles):
     roles_to_remove = [role for role in member.roles if role.id in premium_roles]
     if not has_required_role and roles_to_remove:
         await member.remove_roles(*roles_to_remove)
+        return True  # Indicate that roles were removed for this member
+    return False  # Indicate that no roles were removed for this member
 
 
 class PremiumRoles(commands.Cog):
@@ -49,10 +51,14 @@ class PremiumRoles(commands.Cog):
         """
         Check premium roles for all members and revoke if ineligible..
         """
+        removed_count = 0
         for role in self.premium_roles:
             for member in ctx.guild.get_role(role).members:
                 print(ctx.guild.get_role(role).name)
-                await remove_roles_if_necessary(member, self.required_roles, self.premium_roles)
+                if await remove_roles_if_necessary(member, self.required_roles, self.premium_roles):
+                    removed_count += 1
+
+        await ctx.send(f"Roles removed for {removed_count} member(s).", allowed_mentions=self.allowed_mentions)
 
     @premium.group(name="config")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
