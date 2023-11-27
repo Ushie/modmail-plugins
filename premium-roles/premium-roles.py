@@ -182,7 +182,7 @@ class PremiumRoles(commands.Cog):
             for role_id in role_ids:
                 role = ctx.guild.get_role(role_id)
                 if not role:
-                    self.premium_roles.remove(role_id)
+                    role_ids.remove(role_id)
                     await self._update_db()
                     count += 1
             return count
