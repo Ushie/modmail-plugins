@@ -62,6 +62,9 @@ class PremiumRoles(commands.Cog):
     @premium_config.command(name="addrequired")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_add_required(self, ctx, role: discord.Role):
+        """
+        Add required role.
+        """
         self.required_roles.append(role.id)
         await self._update_db()
         await ctx.send(f"Added {role.mention} as a required role!", allowed_mentions=self.allowed_mentions)
@@ -69,6 +72,9 @@ class PremiumRoles(commands.Cog):
     @premium_config.command(name="removerequired")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_remove_required(self, ctx, role: discord.Role):
+        """
+        Remove required role.
+        """
         if role.id in self.required_roles:
             self.required_roles.remove(role.id)
             await self._update_db()
@@ -79,6 +85,9 @@ class PremiumRoles(commands.Cog):
     @premium_config.command(name="add")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_add_premium(self, ctx, role: discord.Role):
+        """
+        Add premium role.
+        """
         self.premium_roles.append(role.id)
         await self._update_db()
         await ctx.send(f"Added {role.mention} as a premium role!", allowed_mentions=self.allowed_mentions)
@@ -86,6 +95,9 @@ class PremiumRoles(commands.Cog):
     @premium_config.command(name="remove")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_remove_premium(self, ctx, role: discord.Role):
+        """
+        Remove premium role.
+        """
         if role.id in self.premium_roles:
             self.premium_roles.remove(role.id)
             await self._update_db()
