@@ -49,7 +49,7 @@ class PremiumRoles(commands.Cog):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def purge_users(self, ctx):
         """
-        Check premium roles for all members and revoke if ineligible..
+        Check premium roles for all members and revoke if ineligible.
         """
         removed_count = 0
         for role in self.premium_roles:
