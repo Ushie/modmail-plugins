@@ -3,6 +3,14 @@ from discord.ext import commands
 from core import checks
 from core.models import PermissionLevel
 
+
+async def remove_roles_if_necessary(member, required_roles, premium_roles):
+    has_required_role = any(role.id in required_roles for role in member.roles)
+    roles_to_remove = [role for role in member.roles if role.id in premium_roles]
+    if not has_required_role and roles_to_remove:
+        await member.remove_roles(*roles_to_remove)
+
+
 class PremiumRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -35,6 +43,17 @@ class PremiumRoles(commands.Cog):
         """
         await ctx.send_help(ctx.command)
 
+    @premium.command(name="purge")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def purge_users(self, ctx):
+        """
+        Check premium roles for all members and revoke if ineligible..
+        """
+        for role in self.premium_roles:
+            for member in ctx.guild.get_role(role).members:
+                print(ctx.guild.get_role(role).name)
+                await remove_roles_if_necessary(member, self.required_roles, self.premium_roles)
+
     @premium.group(name="config")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config(self, ctx):
@@ -58,7 +77,7 @@ class PremiumRoles(commands.Cog):
 
         response = f"Required Roles:\n{required_roles_str}\n\nPremium Roles:\n{premium_roles_str}"
         await ctx.send(response, allowed_mentions=self.allowed_mentions)
-    
+
     @premium_config.command(name="addrequired")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def premium_config_add_required(self, ctx, role: discord.Role):
@@ -110,17 +129,12 @@ class PremiumRoles(commands.Cog):
         # Check if the roles of the member have changed
         if before.roles == after.roles:
             return
-        
+
         if not self.required_roles:
             return
 
-        # Determine if the member has any required roles
-        has_required_role = any(role.id in self.required_roles for role in after.roles)
+        await remove_roles_if_necessary(after, self.required_roles, self.premium_roles)
 
-        # Remove premium roles if necessary
-        roles_to_remove = [role for role in after.roles if role.id in self.premium_roles]
-        if not has_required_role and roles_to_remove:
-            await after.remove_roles(*roles_to_remove)
 
 async def setup(bot):
     await bot.add_cog(PremiumRoles(bot))
